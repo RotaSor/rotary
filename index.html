@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROTASOR - Giriş</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('arkaplan.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: rgba(255,255,255,0.9);
+      padding: 30px;
+      border-radius: 25px;
+      text-align: center;
+      width: 300px;
+    }
+    h1 {
+      font-size: 30px;
+      color: #001f3f;
+    }
+    img.logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+    button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #001f3f;
+      color: white;
+    }
+    button:hover { background-color: #003366; }
+    input {
+      width: 90%;
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .hidden { display: none; }
+    .error { color: red; font-size: 14px; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" id="welcome-screen">
+    <img src="logo.png" alt="Logo" class="logo">
+    <h1>ROTASOR</h1>
+    <button onclick="showMenu()">ÖĞRENCİ</button>
+  </div>
+
+  <div class="container hidden" id="menu-screen">
+    <h1>ROTASOR</h1>
+    <button onclick="showRegister()">Kaydol</button>
+    <button onclick="showLogin()">Giriş Yap</button>
+  </div>
+
+  <div class="container hidden" id="register-screen">
+    <h2>Kayıt Ol</h2>
+    <input type="text" id="class" placeholder="Sınıf (örn: 10)">
+    <input type="text" id="section" placeholder="Şube (örn: A)">
+    <input type="email" id="email" placeholder="E-posta">
+    <input type="text" id="username" placeholder="Kullanıcı Adı">
+    <input type="password" id="password" placeholder="Şifre">
+    <input type="password" id="confirm-password" placeholder="Şifre (Tekrar)">
+    <p class="error" id="register-error"></p>
+    <button onclick="register()">Kaydol</button>
+    <button onclick="backToMenu()">Geri</button>
+  </div>
+
+  <div class="container hidden" id="login-screen">
+    <h2>Giriş Yap</h2>
+    <input type="text" id="login-class" placeholder="Sınıf">
+    <input type="text" id="login-section" placeholder="Şube">
+    <input type="text" id="login-username" placeholder="Kullanıcı Adı">
+    <input type="password" id="login-password" placeholder="Şifre">
+    <p class="error" id="login-error"></p>
+    <button onclick="login()">Giriş Yap</button>
+    <button onclick="backToMenu()">Geri</button>
+  </div>
+
+  <script>
+    let users = [];
+
+    function showMenu() {
+      document.getElementById("welcome-screen").classList.add("hidden");
+      document.getElementById("menu-screen").classList.remove("hidden");
+    }
+    function showRegister() {
+      document.getElementById("menu-screen").classList.add("hidden");
+      document.getElementById("register-screen").classList.remove("hidden");
+    }
+    function showLogin() {
+      document.getElementById("menu-screen").classList.add("hidden");
+      document.getElementById("login-screen").classList.remove("hidden");
+    }
+    function backToMenu() {
+      document.getElementById("register-screen").classList.add("hidden");
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("menu-screen").classList.remove("hidden");
+    }
+
+    function register() {
+      const className = document.getElementById("class").value;
+      const section = document.getElementById("section").value;
+      const email = document.getElementById("email").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+      const error = document.getElementById("register-error");
+
+      error.textContent = "";
+
+      if (password !== confirmPassword) {
+        error.textContent = "Şifreler eşleşmiyor!";
+        return;
+      }
+
+      if (users.find(u => u.username === username)) {
+        error.textContent = "Bu kullanıcı adı zaten var!";
+        return;
+      }
+
+      users.push({ email, username, password, className, section });
+      alert("Kayıt başarılı!");
+      backToMenu();
+    }
+
+    function login() {
+      const className = document.getElementById("login-class").value;
+      const section = document.getElementById("login-section").value;
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+      const error = document.getElementById("login-error");
+
+      error.textContent = "";
+
+      const user = users.find(u =>
+        u.username === username &&
+        u.password === password &&
+        u.className === className &&
+        u.section === section
+      );
+
+      if (!user) {
+        error.textContent = "Bilgiler yanlış!";
+        return;
+      }
+
+      localStorage.setItem("username", user.username);
+      localStorage.setItem("classSection", `${user.className}/${user.section}`);
+
+      window.location.href = "home.html";
+    }
+  </script>
+
+</body>
+</html>
+
+
