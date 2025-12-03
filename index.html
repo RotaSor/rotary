@@ -3,63 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROTASOR - Giriş</title>
+  <title>ROTASOR</title>
 
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: url('arkaplan.jpg') no-repeat center center fixed;
-      background-size: cover;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 0; padding: 0;
+      font-family: Arial;
+      background: url('arkaplan.jpg') no-repeat center/cover fixed;
+      display: flex; justify-content: center; align-items: center;
       height: 100vh;
     }
     .container {
       background: rgba(255,255,255,0.9);
-      padding: 30px;
-      border-radius: 25px;
-      text-align: center;
-      width: 300px;
+      padding: 30px; border-radius: 20px;
+      text-align: center; width: 300px;
     }
-    h1 {
-      font-size: 30px;
-      color: #001f3f;
-    }
-    img.logo {
-      width: 100px;
-      margin-bottom: 20px;
-    }
+    input, button { width: 90%; padding: 10px; margin: 8px 0; }
     button {
-      width: 100%;
-      margin: 10px 0;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      background: #001f3f; color: white; border: none; border-radius: 8px;
       cursor: pointer;
-      background-color: #001f3f;
-      color: white;
     }
-    button:hover { background-color: #003366; }
-    input {
-      width: 90%;
-      margin: 8px 0;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .hidden { display: none; }
-    .error { color: red; font-size: 14px; }
+    button:hover { background:#003366; }
+    .hidden { display:none; }
+    .error { color:red; font-size:14px; }
   </style>
 </head>
 
 <body>
 
   <div class="container" id="welcome-screen">
-    <img src="logo.png" alt="Logo" class="logo">
+    <img src="logo.png" class="logo" style="width:100px;">
     <h1>ROTASOR</h1>
     <button onclick="showMenu()">ÖĞRENCİ</button>
   </div>
@@ -70,6 +43,7 @@
     <button onclick="showLogin()">Giriş Yap</button>
   </div>
 
+  <!-- KAYIT -->
   <div class="container hidden" id="register-screen">
     <h2>Kayıt Ol</h2>
     <input type="text" id="class" placeholder="Sınıf (örn: 10)">
@@ -83,6 +57,7 @@
     <button onclick="backToMenu()">Geri</button>
   </div>
 
+  <!-- GİRİŞ -->
   <div class="container hidden" id="login-screen">
     <h2>Giriş Yap</h2>
     <input type="text" id="login-class" placeholder="Sınıf">
@@ -94,82 +69,168 @@
     <button onclick="backToMenu()">Geri</button>
   </div>
 
-  <script>
-    let users = [];
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, query, where, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    function showMenu() {
-      document.getElementById("welcome-screen").classList.add("hidden");
-      document.getElementById("menu-screen").classList.remove("hidden");
-    }
-    function showRegister() {
-      document.getElementById("menu-screen").classList.add("hidden");
-      document.getElementById("register-screen").classList.remove("hidden");
-    }
-    function showLogin() {
-      document.getElementById("menu-screen").classList.add("hidden");
-      document.getElementById("login-screen").classList.remove("hidden");
-    }
-    function backToMenu() {
-      document.getElementById("register-screen").classList.add("hidden");
-      document.getElementById("login-screen").classList.add("hidden");
-      document.getElementById("menu-screen").classList.remove("hidden");
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzoeVskd64F14c1apRIvF6qqEMhkg7slo",
+      authDomain: "rotasor.firebaseapp.com",
+      projectId: "rotasor",
+      storageBucket: "rotasor.firebasestorage.app",
+      messagingSenderId: "869549028260",
+      appId: "1:869549028260:web:ce7d16c91a9755019bc731"
+    };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- DOM referanslarını al (hepsini getElementById ile) ---
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const menuScreen = document.getElementById("menu-screen");
+  const registerScreen = document.getElementById("register-screen");
+  const loginScreen = document.getElementById("login-screen");
+
+  // Register inputs
+  const inpClass = document.getElementById("class");               // id="class"
+  const inpSection = document.getElementById("section");         // id="section"
+  const inpEmail = document.getElementById("email");             // id="email"
+  const inpUsername = document.getElementById("username");       // id="username"
+  const inpPassword = document.getElementById("password");       // id="password"
+  const inpConfirm = document.getElementById("confirm-password");// id="confirm-password"
+  const registerError = document.getElementById("register-error");
+
+  // Login inputs
+  const inpLoginClass = document.getElementById("login-class");
+  const inpLoginSection = document.getElementById("login-section");
+  const inpLoginUsername = document.getElementById("login-username");
+  const inpLoginPassword = document.getElementById("login-password");
+  const loginError = document.getElementById("login-error");
+
+  // --- EKRAN GEÇİŞLERİ ---
+  window.showMenu = function() {
+    welcomeScreen.classList.add("hidden");
+    menuScreen.classList.remove("hidden");
+  };
+  window.showRegister = function() {
+    menuScreen.classList.add("hidden");
+    registerScreen.classList.remove("hidden");
+  };
+  window.showLogin = function() {
+    menuScreen.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+  };
+  window.backToMenu = function() {
+    registerScreen.classList.add("hidden");
+    loginScreen.classList.add("hidden");
+    menuScreen.classList.remove("hidden");
+  };
+
+  // --- KAYIT ---
+  window.register = async function() {
+    const className = inpClass.value.trim();
+    const sectionValue = inpSection.value.trim();
+    const emailValue = inpEmail.value.trim();
+    const usernameValue = inpUsername.value.trim();
+    const passwordValue = inpPassword.value;
+    const confirmValue = inpConfirm.value;
+
+    registerError.textContent = "";
+
+    if (!className || !sectionValue || !emailValue || !usernameValue || !passwordValue) {
+      registerError.textContent = "Lütfen tüm alanları doldurun.";
+      return;
     }
 
-    function register() {
-      const className = document.getElementById("class").value;
-      const section = document.getElementById("section").value;
-      const email = document.getElementById("email").value;
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirm-password").value;
-      const error = document.getElementById("register-error");
+    if (passwordValue !== confirmValue) {
+      registerError.textContent = "Şifreler eşleşmiyor!";
+      return;
+    }
 
-      error.textContent = "";
-
-      if (password !== confirmPassword) {
-        error.textContent = "Şifreler eşleşmiyor!";
+    // Kullanıcı adı benzersiz mi?
+    try {
+      const q = query(collection(db, "users"), where("username", "==", usernameValue));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        registerError.textContent = "Bu kullanıcı adı zaten var!";
         return;
       }
 
-      if (users.find(u => u.username === username)) {
-        error.textContent = "Bu kullanıcı adı zaten var!";
-        return;
-      }
+      // Auth hesabını oluştur
+      const userCred = await createUserWithEmailAndPassword(auth, emailValue, passwordValue);
+      const uid = userCred.user.uid;
 
-      users.push({ email, username, password, className, section });
+      // Firestore'a profil bilgisi ekle
+      await setDoc(doc(db, "users", uid), {
+        uid,
+        username: usernameValue,
+        email: emailValue,
+        className,
+        section: sectionValue
+      });
+
       alert("Kayıt başarılı!");
+      // temizle (opsiyonel)
+      inpClass.value = inpSection.value = inpEmail.value = inpUsername.value = inpPassword.value = inpConfirm.value = "";
       backToMenu();
+
+    } catch (err) {
+      registerError.textContent = "Hata: " + err.message;
+    }
+  };
+
+  // --- GİRİŞ ---
+  window.login = async function() {
+    const className = inpLoginClass.value.trim();
+    const sectionValue = inpLoginSection.value.trim();
+    const usernameValue = inpLoginUsername.value.trim();
+    const passwordValue = inpLoginPassword.value;
+
+    loginError.textContent = "";
+
+    if (!className || !sectionValue || !usernameValue || !passwordValue) {
+      loginError.textContent = "Lütfen tüm alanları doldurun.";
+      return;
     }
 
-    function login() {
-      const className = document.getElementById("login-class").value;
-      const section = document.getElementById("login-section").value;
-      const username = document.getElementById("login-username").value;
-      const password = document.getElementById("login-password").value;
-      const error = document.getElementById("login-error");
-
-      error.textContent = "";
-
-      const user = users.find(u =>
-        u.username === username &&
-        u.password === password &&
-        u.className === className &&
-        u.section === section
+    try {
+      // Kullanıcı adı + sınıf + şube eşleşen belgeyi bul
+      const q = query(
+        collection(db, "users"),
+        where("username", "==", usernameValue),
+        where("className", "==", className),
+        where("section", "==", sectionValue)
       );
 
-      if (!user) {
-        error.textContent = "Bilgiler yanlış!";
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        loginError.textContent = "Bilgiler hatalı!";
         return;
       }
 
-      localStorage.setItem("username", user.username);
-      localStorage.setItem("classSection", `${user.className}/${user.section}`);
+      const userData = snap.docs[0].data();
+      const email = userData.email;
+
+      await signInWithEmailAndPassword(auth, email, passwordValue);
+
+      // Bilgileri localStorage'a yaz
+      localStorage.setItem("username", userData.username);
+      localStorage.setItem("classSection", `${userData.className}/${userData.section}`);
 
       window.location.href = "home.html";
+
+    } catch (err) {
+      loginError.textContent = "Hata: " + err.message;
     }
-  </script>
+  };
+</script>
 
 </body>
 </html>
-
-
